@@ -1,0 +1,4 @@
+import {json,body,admin,randomId,safeText} from "./_auth.mjs";
+import {get,put} from "./_store.mjs";
+export default async event=>{if(event.httpMethod!=="POST")return json(405,{error:"Método no permitido"});if(!admin(event))return json(401,{error:"Solo administración."});const b=body(event),title=safeText(b.title,120),category=safeText(b.category,40),url=safeText(b.url,1000),description=safeText(b.description,500);let parsed;try{parsed=new URL(url)}catch{return json(400,{error:"Enlace no válido."})}if(!title||parsed.protocol!=="https:")return json(400,{error:"Pon un nombre y un enlace HTTPS válido."});const products=await get("products",[]);products.unshift({id:randomId(),title,category,url:parsed.href,description,createdAt:new Date().toISOString()});await put("products",products);return json(200,{ok:true})};
+export const config={path:"/.netlify/functions/admin-create-product"};

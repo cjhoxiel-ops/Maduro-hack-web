@@ -1,0 +1,4 @@
+import {sign,cookie,json,body} from "./_auth.mjs";
+import crypto from "node:crypto";
+export default async event=>{if(event.httpMethod!=="POST")return json(405,{error:"Método no permitido"});const b=body(event),given=typeof b.password==="string"?b.password:"",expected=process.env.ADMIN_PASSWORD||"";if(expected.length<12||!process.env.SESSION_SECRET||process.env.SESSION_SECRET.length<32)return json(503,{error:"Configura ADMIN_PASSWORD (12+ caracteres) y SESSION_SECRET (32+ caracteres) en Netlify."});const a=Buffer.from(given),z=Buffer.from(expected);if(a.length!==z.length||!crypto.timingSafeEqual(a,z))return json(401,{error:"Contraseña incorrecta."});return json(200,{role:"admin",username:"Administrador"},{ "Set-Cookie":cookie(sign({role:"admin",username:"Administrador"}))})};
+export const config={path:"/.netlify/functions/admin-login"};
